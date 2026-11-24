@@ -1,56 +1,31 @@
-# Welcome to your Expo app 👋
+# PaisaBook
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A fast, simple expense and money manager for Android and the web (Add to Home Screen on iPhone).
+Built with Expo (React Native) and Supabase. Both versions use the same database, so data is the same everywhere.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run it
 
 ```bash
-npm run reset-project
+npx expo start
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+- **Android phone:** install Expo Go, connect to the same Wi-Fi, scan the QR code.
+- **Browser:** press `w`.
 
-### Other setup steps
+## First-time database setup
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Open the Supabase dashboard → **SQL Editor** → paste the contents of `supabase/schema.sql` → **Run**.
+The project URL and publishable key go in `.env.local` (not committed to git).
 
-## Learn more
+## How it is organised
 
-To learn more about developing your project with Expo, look at the following resources:
+- `src/app/(tabs)/` — the four tabs: Accounts, Chart, Calendar, Settings
+- `src/app/txn.tsx` — add/edit an income or expense
+- `src/app/account/[id].tsx` — transactions of one account
+- `src/lib/store.ts` — all data: kept on the phone, changes queued and synced to Supabase
+- `supabase/schema.sql` — database tables and security rules
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Upcoming transactions
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+A transaction dated in the future is "upcoming": it is listed but not counted in the balance.
+It starts counting automatically when its time arrives, or immediately when you tap **Done** on it.
