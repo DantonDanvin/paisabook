@@ -57,7 +57,7 @@ export default function Chart() {
   const waitingTotal = sum(waiting.map((t) => (t.type === 'income' ? t.amount : -t.amount)));
 
   return (
-    <Screen>
+    <Screen tabs>
       <Header
         title={monthLabel(view.y, view.m)}
         left={<IconButton name="back" label="Previous month" onPress={() => shift(-1)} />}

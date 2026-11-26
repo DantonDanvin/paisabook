@@ -18,7 +18,7 @@ export default function Search() {
     : txns
         .filter((t) => {
           const category = categories.find((c) => c.id === t.category_id)?.name ?? '';
-          return [t.payee, t.memo, t.check_num, category, String(t.amount)].some((v) => v.toLowerCase().includes(q));
+          return [t.memo, category, String(t.amount)].some((v) => v.toLowerCase().includes(q));
         })
         .slice(0, 200);
 
@@ -30,7 +30,7 @@ export default function Search() {
         value={text}
         onChangeText={setText}
         autoFocus
-        placeholder="Payee, memo, check number, amount…"
+        placeholder="Category, remark, amount…"
         placeholderTextColor={C.faint}
       />
       <FlatList

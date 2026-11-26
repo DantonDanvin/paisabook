@@ -6,8 +6,24 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/icon';
 import { C, PALETTE } from '@/lib/theme';
 
-export function Screen({ children, color = C.bg }: { children: ReactNode; color?: string }) {
-  return <View style={[styles.screen, { backgroundColor: color }]}>{children}</View>;
+// `tabs` marks the four main screens, where the tab bar already sits above the phone's
+// back/home buttons. Every other screen leaves that space free itself.
+export function Screen({
+  children,
+  color = C.bg,
+  tabs = false,
+}: {
+  children: ReactNode;
+  color?: string;
+  tabs?: boolean;
+}) {
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[styles.screen, { backgroundColor: color, paddingBottom: tabs ? 0 : insets.bottom }]}>
+      {/* Inner box, so that the floating Income/Expense buttons are placed above the padding too. */}
+      <View style={styles.screen}>{children}</View>
+    </View>
+  );
 }
 
 export function IconButton({
@@ -221,8 +237,9 @@ export const styles = StyleSheet.create({
   iconButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingBottom: 8, gap: 4 },
   headerTitle: { flex: 1, fontSize: 20, fontWeight: '600', paddingHorizontal: 4 },
-  headerBig: { flex: 1, fontSize: 30, fontWeight: '800', paddingHorizontal: 8 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  // The big title never shrinks; on narrow phones the buttons beside it give way instead.
+  headerBig: { flexGrow: 1, flexShrink: 0, fontSize: 30, fontWeight: '800', paddingHorizontal: 8 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
   band: {
     flexDirection: 'row',
     justifyContent: 'space-between',

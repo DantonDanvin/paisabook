@@ -25,6 +25,8 @@ export default function AccountEdit() {
       name: name.trim(),
       start_balance: parseAmount(start),
       color,
+      // New accounts go to the bottom of the list.
+      sort_order: existing?.sort_order ?? accounts.length,
       created_at: existing?.created_at ?? new Date().toISOString(),
     });
     goBack();

@@ -17,8 +17,11 @@ create table if not exists public.accounts (
   name text not null,
   start_balance numeric(14, 2) not null default 0,
   color text not null default '#7C3AED',
+  sort_order integer not null default 0,
   created_at timestamptz not null default now()
 );
+-- Added later: position of the account in the list (changed by dragging).
+alter table public.accounts add column if not exists sort_order integer not null default 0;
 
 create table if not exists public.categories (
   id uuid primary key,

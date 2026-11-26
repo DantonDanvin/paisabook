@@ -8,6 +8,8 @@ export type Account = {
   name: string;
   start_balance: number;
   color: string;
+  // Position in the accounts list, smallest first. Changed by dragging.
+  sort_order: number;
   created_at: string;
 };
 
@@ -20,17 +22,14 @@ export type Category = {
   created_at: string;
 };
 
-export type Payee = { id: string; profile_id: string; name: string; created_at: string };
-
 export type Txn = {
   id: string;
   profile_id: string;
   account_id: string;
   type: TxnType;
   amount: number;
-  payee: string;
   category_id: string | null;
-  check_num: string;
+  // The remark typed by the user. (The database column is still called memo.)
   memo: string;
   // When the transaction starts counting. In the future = upcoming.
   occurs_at: string;
@@ -42,7 +41,6 @@ export type Data = {
   profiles: Profile[];
   accounts: Account[];
   categories: Category[];
-  payees: Payee[];
   transactions: Txn[];
 };
 

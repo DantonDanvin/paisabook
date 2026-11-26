@@ -35,7 +35,7 @@ export default function Settings() {
         : 'Not synced yet';
 
   return (
-    <Screen>
+    <Screen tabs>
       <Header big title="Settings" />
       <ScrollView contentContainerStyle={styles.body}>
         <Row
@@ -45,7 +45,6 @@ export default function Settings() {
           onPress={() => router.push('/profiles')}
         />
         <View style={styles.gap} />
-        <Row icon="user" iconColor="#2563EB" title="Payee" onPress={() => router.push('/payees')} />
         <Row icon="tag" iconColor="#7C3AED" title="Category" onPress={() => router.push('/categories')} />
         <Row icon="export" iconColor="#0891B2" title="Export Data" value="CSV" onPress={runExport} />
         {exportNote !== '' && <Text style={styles.note}>{exportNote}</Text>}

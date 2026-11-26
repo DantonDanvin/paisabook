@@ -22,6 +22,7 @@ const PATHS = {
   logout: ['M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4', 'M16 17l5-5-5-5', 'M21 12H9'],
   income: ['M17 7L7 17', 'M17 17H7V7'],
   expense: ['M7 17L17 7', 'M7 7h10v10'],
+  drag: ['M4 8h16', 'M4 12h16', 'M4 16h16'],
   money: ['M12 1v22', 'M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'],
 } as const;
 

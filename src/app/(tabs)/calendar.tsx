@@ -34,7 +34,7 @@ export default function Calendar() {
   const rows = txns.filter((t) => dayKey(new Date(t.occurs_at)) === key);
 
   return (
-    <Screen>
+    <Screen tabs>
       <Header
         title={monthLabel(view.y, view.m)}
         left={

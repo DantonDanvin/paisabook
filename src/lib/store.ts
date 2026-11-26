@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
 
 import { supabase } from './supabase';
-import type { Account, Category, Data, Payee, Profile, Table, Txn, TxnType } from './types';
+import type { Account, Category, Data, Profile, Table, Txn, TxnType } from './types';
 
 // One in-memory copy of everything, mirrored to the phone's storage so the app opens instantly
 // and works offline. Changes are applied locally first, then sent to Supabase from a queue.
@@ -23,18 +23,17 @@ export type State = {
   now: number;
 };
 
-const EMPTY: Data = { profiles: [], accounts: [], categories: [], payees: [], transactions: [] };
+const EMPTY: Data = { profiles: [], accounts: [], categories: [], transactions: [] };
 
 const COLUMNS: Record<Table, string> = {
   profiles: 'id,name,currency,created_at',
-  accounts: 'id,profile_id,name,start_balance,color,created_at',
+  accounts: 'id,profile_id,name,start_balance,color,sort_order,created_at',
   categories: 'id,profile_id,name,type,color,created_at',
-  payees: 'id,profile_id,name,created_at',
   transactions:
-    'id,profile_id,account_id,type,amount,payee,category_id,check_num,memo,occurs_at,done_at,created_at',
+    'id,profile_id,account_id,type,amount,category_id,memo,occurs_at,done_at,created_at',
 };
 // Parents first, so a queued account is saved before its transactions.
-const TABLES: Table[] = ['profiles', 'accounts', 'categories', 'payees', 'transactions'];
+const TABLES: Table[] = ['profiles', 'accounts', 'categories', 'transactions'];
 
 let state: State = {
   auth: 'loading',
@@ -130,7 +129,6 @@ function applyOp(data: Data, op: Op): Data {
   if (op.table === 'profiles') {
     next.accounts = next.accounts.filter((r) => r.profile_id !== id);
     next.categories = next.categories.filter((r) => r.profile_id !== id);
-    next.payees = next.payees.filter((r) => r.profile_id !== id);
     next.transactions = next.transactions.filter((r) => r.profile_id !== id);
   } else if (op.table === 'accounts') {
     next.transactions = next.transactions.filter((r) => r.account_id !== id);
@@ -205,13 +203,12 @@ export async function sync() {
       set({ outbox: state.outbox.slice(1) });
       save();
     }
-    const [profiles, accounts, categories, payees, transactions] = await Promise.all(TABLES.map(fetchAll));
+    const [profiles, accounts, categories, transactions] = await Promise.all(TABLES.map(fetchAll));
     if (state.userId !== userId) return;
     let data = {
       profiles,
       accounts: (accounts as Account[]).map((a) => ({ ...a, start_balance: Number(a.start_balance) })),
       categories,
-      payees,
       transactions: (transactions as Txn[]).map((t) => ({ ...t, amount: Number(t.amount) })),
     } as Data;
     // Changes made while we were downloading are still queued; keep them visible.
@@ -252,6 +249,7 @@ export function createProfile(name: string, currency = 'INR'): string {
     name: 'Cash',
     start_balance: 0,
     color: '#7C3AED',
+    sort_order: 0,
     created_at: now,
   };
   ops.push({ table: 'accounts', kind: 'upsert', row: account });
@@ -287,16 +285,17 @@ export function markDone(txn: Txn) {
   put('transactions', { ...txn, occurs_at: now, done_at: now });
 }
 
-// Remembers a typed payee name so it is suggested next time.
-export function rememberPayee(profileId: string, name: string) {
-  const clean = name.trim();
-  if (!clean) return;
-  const known = state.data.payees.some(
-    (p) => p.profile_id === profileId && p.name.toLowerCase() === clean.toLowerCase()
-  );
-  if (known) return;
-  const row: Payee = { id: uuid(), profile_id: profileId, name: clean, created_at: new Date().toISOString() };
-  put('payees', row);
+// Saves a new order for the accounts list. `ids` is every account of the profile, top to bottom.
+export function reorderAccounts(ids: string[]) {
+  const ops: Op[] = [];
+  ids.forEach((id, index) => {
+    const account = state.data.accounts.find((a) => a.id === id);
+    if (account && account.sort_order !== index) {
+      const row: Account = { ...account, sort_order: index };
+      ops.push({ table: 'accounts', kind: 'upsert', row });
+    }
+  });
+  if (ops.length > 0) enqueue(ops);
 }
 
 // ---- auth ------------------------------------------------------------------------------------
@@ -379,7 +378,6 @@ export type ProfileData = {
   currency: string;
   accounts: Account[];
   categories: Category[];
-  payees: Payee[];
   txns: Txn[];
 };
 
@@ -393,9 +391,11 @@ function profileData(data: Data, id: string | null): ProfileData {
   const value: ProfileData = {
     profile,
     currency: profile?.currency ?? 'INR',
-    accounts: data.accounts.filter((r) => r.profile_id === id),
+    // In the order the user arranged them; accounts never moved keep the order they were made in.
+    accounts: data.accounts
+      .filter((r) => r.profile_id === id)
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.created_at.localeCompare(b.created_at)),
     categories: data.categories.filter((r) => r.profile_id === id).sort(byName),
-    payees: data.payees.filter((r) => r.profile_id === id).sort(byName),
     // Newest first.
     txns: data.transactions.filter((r) => r.profile_id === id).sort((a, b) => time(b) - time(a)),
   };

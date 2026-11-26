@@ -6,7 +6,7 @@ import { Button, ConfirmButton, Field, Header, IconButton, Screen, goBack } from
 import { createProfile, put, remove, setActiveProfile, useStore } from '@/lib/store';
 import { C } from '@/lib/theme';
 
-// Each profile has its own accounts, transactions, categories and payees.
+// Each profile has its own accounts, transactions and categories.
 export default function Profiles() {
   const s = useStore();
   const profiles = s.data.profiles;

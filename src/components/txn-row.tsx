@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Icon } from '@/components/icon';
 import { dateLabel, money, timeLabel } from '@/lib/format';
+import { isOnline } from '@/lib/online';
 import { isDone, markDone } from '@/lib/store';
 import { C } from '@/lib/theme';
 import type { Category, Txn } from '@/lib/types';
@@ -25,13 +27,17 @@ export function TxnRow({
   onPress: () => void;
 }) {
   const income = txn.type === 'income';
+  const [offline, setOffline] = useState(false);
+  const done = async () => {
+    const online = await isOnline();
+    setOffline(!online);
+    if (online) markDone(txn);
+  };
   const upcoming = !isDone(txn, now);
   const when = new Date(txn.occurs_at);
-  const details = [
-    `${dateLabel(when)}, ${timeLabel(when)}`,
-    txn.check_num && `Check ${txn.check_num}`,
-    accountName,
-  ].filter(Boolean);
+  const details = [`${dateLabel(when)}, ${timeLabel(when)}`, accountName].filter(Boolean);
+  // "Business (Sujal)": the category, with the remark in brackets when there is one.
+  const name = category?.name ?? (income ? 'Income' : 'Expense');
 
   return (
     <Pressable onPress={onPress} style={[styles.row, upcoming && styles.upcoming]}>
@@ -40,12 +46,13 @@ export function TxnRow({
       </View>
       <View style={styles.middle}>
         <Text style={styles.title} numberOfLines={1}>
-          {txn.payee || category?.name || (income ? 'Income' : 'Expense')}
+          {txn.memo ? `${name} (${txn.memo})` : name}
         </Text>
         <Text style={styles.sub} numberOfLines={1}>
           {details.join(' · ')}
         </Text>
         {upcoming && <Text style={styles.wait}>Upcoming · counts at this time</Text>}
+        {offline && <Text style={styles.offline}>No internet. Connect and tap Done again.</Text>}
       </View>
       <View style={styles.right}>
         <Text style={[styles.amount, { color: income ? C.income : C.expense }]}>
@@ -53,7 +60,7 @@ export function TxnRow({
         </Text>
         {running != null && <Text style={styles.sub}>{money(running, currency)}</Text>}
         {upcoming && (
-          <Pressable style={styles.done} onPress={() => markDone(txn)} hitSlop={6}>
+          <Pressable style={styles.done} onPress={() => void done()} hitSlop={6}>
             <Text style={styles.doneText}>Done</Text>
           </Pressable>
         )}
@@ -79,6 +86,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 17, color: C.text },
   sub: { fontSize: 13, color: C.muted },
   wait: { fontSize: 12, color: '#9A6B00' },
+  offline: { fontSize: 12, color: C.expense, fontWeight: '600' },
   amount: { fontSize: 17, fontWeight: '600' },
   done: {
     marginTop: 4,
